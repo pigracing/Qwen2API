@@ -288,8 +288,9 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
   const notStreamResponseT2I = async (response) => {
     try {
       const taskId = response.messages[1].extra.wanx.task_id
+      let _count = 6
       const intervalCallback = setInterval(async () => {
-        const _response = await axios.post('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
+        const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
             {
             headers: {
                 "Authorization": `Bearer ${authToken}`,
@@ -319,7 +320,15 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
             ]
         })
         }
-      },1000)
+        if(_count==0){
+          clearInterval(intervalCallback)
+          res.status(500)
+          .json({
+            error: "服务错误!!!"
+          })
+        }
+        _count--
+      },5000)
       
     } catch (error) {
       console.log(error)

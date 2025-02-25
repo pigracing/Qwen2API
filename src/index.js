@@ -287,6 +287,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
   const notStreamResponseT2I = async (response) => {
     try {
+      console.log(response)
       const taskId = response.messages[1].extra.wanx.task_id
       let _count = 6
       const intervalCallback = setInterval(async () => {

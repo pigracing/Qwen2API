@@ -64,7 +64,7 @@ Qwen2API/
 1. 使用 Docker 命令：
 
    ```bash
-   docker run -d -p 3000:3000 -e LISTEN_ADDRESS=0.0.0.0 -e API_KEY=sk-123456 -e ACCOUNT_TOKENS=ey1...,ey2...,ey3... -e API_PREFIX= -e SERVICE_PORT=3000 --name qwen2api rfym21/qwen2api:latest
+   docker run -d -p 3000:3000 -e API_KEY=sk-123456 -e ACCOUNT_TOKENS=ey1...,ey2...,ey3... --name qwen2api rfym21/qwen2api:latest
    ```
 
 2. 使用 docker-compose 运行服务：
@@ -154,6 +154,20 @@ Qwen2API/
 ### 上传图像
 
 在发送聊天消息时，如果消息包含图像，API 会自动处理图像上传。
+
+### 模型启用推理或搜索
+
+- 在模型名后添加"-search"启用搜索
+
+  > 示例：qwen-max-latest-search
+
+- 在模型名后添加"-thinking"启用推理
+
+  > 示例：qwen-max-latest-thinking
+
+- 在模型名后添加"-thinking-search"启用推理和搜索
+
+  > 示例：qwen-max-latest-thinking-search
 
 ## 依赖
 

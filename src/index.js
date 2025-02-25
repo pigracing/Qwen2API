@@ -291,6 +291,13 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       let _count = 6
       const intervalCallback = setInterval(async () => {
         try {
+        if(_count==0){
+            clearInterval(intervalCallback)
+            res.status(500)
+            .json({
+              error: "服务错误!!!"
+            })
+         }
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {
               headers: {
@@ -322,15 +329,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
           })
           }
         } catch (err) {
-          console.error("Request failed:", err.response?.status, err.response?.data)
+          console.error("Request failed:", err.response?.status, err.response?.data,'https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId)
           _count--
-        }
-        if(_count==0){
-          clearInterval(intervalCallback)
-          res.status(500)
-          .json({
-            error: "服务错误!!!"
-          })
         }
         _count--
       },5000)

@@ -9,6 +9,11 @@ const fs = require('fs')
 const path = require('path')
 const dotenv = require('dotenv')
 dotenv.config()
+if ((!process.env.ACCOUNT_TOKENS && process.env.API_KEY) || (process.env.ACCOUNT_TOKENS && !process.env.API_KEY)) {
+  console.log('如果需要使用多账户，请设置ACCOUNT_TOKENS和API_KEY')
+  process.exit(1)
+}
+
 const accountTokens = process.env.ACCOUNT_TOKENS
 let accountManager = null
 
@@ -37,7 +42,7 @@ app.get('/', async (req, res) => {
     let html = fs.readFileSync(path.join(__dirname, 'home.html'), 'utf-8')
     if (accountManager) {
       res.setHeader('Content-Type', 'text/html')
-      html = html.replace('BASE_URL', `http://${process.env.LISTEN_ADDRESS}:${process.env.SERVICE_PORT}${process.env.API_PREFIX ? process.env.API_PREFIX : ''}`)
+      html = html.replace('BASE_URL', `http://${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : "localhost"}:${process.env.SERVICE_PORT}${process.env.API_PREFIX ? process.env.API_PREFIX : ''}`)
       html = html.replace('RequestNumber', accountManager.getRequestNumber())
       html = html.replace('SuccessAccountNumber', accountManager.getAccountTokensNumber())
       html = html.replace('ErrorAccountNumber', accountManager.getErrorAccountTokensNumber())
@@ -55,6 +60,7 @@ app.get('/', async (req, res) => {
 app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, async (req, res) => {
   try {
     let authToken = req.headers.authorization
+
     if (authToken) {
       // 如果提供了 Authorization header，验证是否与 API_KEY 匹配
       if (authToken === `Bearer ${process.env.API_KEY}`) {
@@ -63,6 +69,9 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
     } else if (accountManager) {
       // 如果没有 Authorization header 且有账户管理，使用账户 token
       authToken = accountManager.getAccountToken()
+    } else {
+      res.json(await accountManager.getModelList())
+      return
     }
 
     const response = await axios.get('https://chat.qwenlm.ai/api/models',
@@ -72,13 +81,20 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
       })
-
+    const modelsList_response = response.data.data
+    const modelsList = []
+    for (const item of modelsList_response) {
+      modelsList.push(item.id)
+      modelsList.push(item.id + '-thinking')
+      modelsList.push(item.id + '-search')
+      modelsList.push(item.id + '-thinking-search')
+    }
     const models = {
       "object": "list",
-      "data": response.data.data.map(item => ({
-        "id": item.id,
+      "data": modelsList.map(item => ({
+        "id": item,
         "object": "model",
-        "created": item.created,
+        "created": new Date().getTime(),
         "owned_by": "qwenlm"
       })),
       "object": "list"
@@ -167,28 +183,44 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       const id = uuid.v4()
       const decoder = new TextDecoder('utf-8')
       let backContent = null
-      response.on('data', (chunk) => {
-        const decodeText = decoder.decode(chunk)
+      let webSearchInfo = null
+      let temp_content = ''
 
+      response.on('data', async (chunk) => {
+        const decodeText = decoder.decode(chunk)
+        // console.log(decodeText)
         const lists = decodeText.split('\n').filter(item => item.trim() !== '')
         for (const item of lists) {
           try {
-            const decodeJson = isJson(item.replace(/^data: /, '')) ? JSON.parse(item.replace(/^data: /, '')) : null
+
+            let decodeJson = isJson(item.replace("data: ", '')) ? JSON.parse(item.replace("data: ", '')) : null
 
             if (decodeJson === null) {
-              continue
+              temp_content += item
+              decodeJson = isJson(temp_content.replace("data: ", '')) ? JSON.parse(temp_content.replace("data: ", '')) : null
+              if (decodeJson === null) {
+                continue
+              }
+              temp_content = ''
             }
 
-            // console.log(JSON.stringify(decodeJson))
+            if (decodeJson.choices[0].delta.name === 'web_search') {
+              webSearchInfo = decodeJson.choices[0].delta.extra.web_search_info
+              // console.log(webSearchInfo)
+            }
+
             let content = decodeJson.choices[0].delta.content
+            console.log(content)
+            
 
             if (backContent === null) {
               backContent = content
             } else {
               const temp = content
-              content = content.replace(backContent, '')
+              content = await content.replace(backContent, '')
               backContent = temp
-            }
+            } 
+
 
             const StreamTemplate = {
               "id": `chatcmpl-${id}`,
@@ -216,6 +248,29 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       })
 
       response.on('end', () => {
+        // console.log(webSearchInfo)
+
+        if (webSearchInfo) {
+          const webSearchTable = `
+
+
+
+${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www.baidu.com"})`).join('\n')}`
+
+          res.write(`data: ${JSON.stringify({
+            "id": `chatcmpl-${id}`,
+            "object": "chat.completion.chunk",
+            "created": new Date().getTime(),
+            "choices": [
+              {
+                "index": 0,
+                "delta": {
+                  "content": webSearchTable
+                }
+              }
+            ]
+          })}\n\n`)
+        }
         res.write(`data: [DONE]\n\n`)
         res.end()
       })
@@ -231,8 +286,30 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
 
   try {
+
+    // 判断是否开启推理
+    let thinkingEnabled = false
+    if (req.body.model.includes('-thinking')) {
+      thinkingEnabled = true
+      messages[messages.length - 1].feature_config = {
+        "thinking_enabled": thinkingEnabled
+      }
+      req.body.model = req.body.model.replace('-thinking', '')
+    }
+    let searchEnabled = false
+    if (req.body.model.includes('-search')) {
+      searchEnabled = true
+      messages[messages.length - 1].chat_type = 'search'
+      req.body.model = req.body.model.replace('-search', '')
+    }
+
     const response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
-      req.body,
+      {
+        "model": req.body.model,
+        "messages": messages,
+        "stream": stream,
+        "chat_type": searchEnabled ? 'search' : "t2t"
+      },
       {
         headers: {
           "Authorization": `Bearer ${authToken}`,
@@ -257,22 +334,29 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
     }
 
   } catch (error) {
+    console.log(error)
     res.status(500)
       .json({
-        error: "请求发送失败！！！"
+        error: "token无效,请求发送失败！！！"
       })
   }
 
 })
 
-app.listen(process.env.SERVICE_PORT || 3000, process.env.LISTEN_ADDRESS || '0.0.0.0', () => {
-  console.log(`服务运行于:
+const startInfo = `
 -------------------------------------------------------------------
-监听地址：${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : '0.0.0.0'}
+监听地址：${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : 'localhost'}
 服务端口：${process.env.SERVICE_PORT}
 API前缀：${process.env.API_PREFIX ? process.env.API_PREFIX : '未设置'}
 账户数：${accountManager ? accountManager.getAccountTokensNumber() : '未启用'}
 -------------------------------------------------------------------
-    `)
-})
-
+`
+if (process.env.LISTEN_ADDRESS) {
+  app.listen(process.env.SERVICE_PORT || 3000, process.env.LISTEN_ADDRESS, () => {
+    console.log(startInfo)
+  })
+} else {
+  app.listen(process.env.SERVICE_PORT || 3000, () => {
+    console.log(startInfo)
+  })
+}

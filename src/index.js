@@ -57,7 +57,7 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
     let authToken = req.headers.authorization
     if (authToken) {
       // 如果提供了 Authorization header，验证是否与 API_KEY 匹配
-      if (authToken === Bearer ${process.env.API_KEY}) {
+      if (authToken === `Bearer ${process.env.API_KEY}`) {
         authToken = accountManager.getAccountToken()
       }
     } else if (accountManager) {

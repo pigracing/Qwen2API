@@ -285,6 +285,51 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
   }
 
+  const notStreamResponseT2I = async (response) => {
+    try {
+      const taskId = response.messages[1].extra.wanx.task_id
+      const intervalCallback = setInterval(async () => {
+        const _response = await axios.post('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
+            {
+            headers: {
+                "Authorization": `Bearer ${authToken}`,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            responseType: 'json'
+            }
+        )
+        if(_response.data.task_status === 'success') {
+          clearInterval(intervalCallback)
+          const imgUrl = _response.data.content
+          res.set({
+            'Content-Type': 'application/json',
+          })
+          res.json({
+            "created": new Date().getTime(),
+            "model": req.body.model,
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "[image](" + imgUrl + ")"
+                    },
+                    "finish_reason": "stop"
+                }
+            ]
+        })
+        }
+      },1000)
+      
+    } catch (error) {
+      console.log(error)
+      res.status(500)
+        .json({
+          error: "服务错误!!!"
+        })
+    }
+  }
+
   try {
 
     // 判断是否开启推理
@@ -296,11 +341,21 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       }
       req.body.model = req.body.model.replace('-thinking', '')
     }
+    let chatType = 't2t'
     let searchEnabled = false
     if (req.body.model.includes('-search')) {
       searchEnabled = true
+      chatType = 'search'
       messages[messages.length - 1].chat_type = 'search'
       req.body.model = req.body.model.replace('-search', '')
+    }
+
+    let t2iEnabled = false
+    if (req.body.model.includes('-t2i')) {
+      t2iEnabled = true
+      chatType = 't2i'
+      messages[messages.length - 1].chat_type = 't2i'
+      req.body.model = req.body.model.replace('-t2i', '')
     }
 
     const response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
@@ -308,7 +363,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
         "model": req.body.model,
         "messages": messages,
         "stream": stream,
-        "chat_type": searchEnabled ? 'search' : "t2t"
+        "chat_type": chatType
       },
       {
         headers: {
@@ -319,18 +374,22 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       }
     )
 
-    if (stream) {
-      res.set({
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      })
-      streamResponse(response.data)
-    } else {
-      res.set({
-        'Content-Type': 'application/json',
-      })
-      notStreamResponse(response.data)
+    if(t2iEnabled){
+        notStreamResponseT2I(response.data)
+    }else{
+        if (stream) {
+        res.set({
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        })
+        streamResponse(response.data)
+        } else {
+        res.set({
+            'Content-Type': 'application/json',
+        })
+        notStreamResponse(response.data)
+        }
     }
 
   } catch (error) {

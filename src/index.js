@@ -290,35 +290,40 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       const taskId = response.messages[1].extra.wanx.task_id
       let _count = 6
       const intervalCallback = setInterval(async () => {
-        const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
-            {
-            headers: {
-                "Authorization": `Bearer ${authToken}`,
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            },
-            responseType: 'json'
-            }
-        )
-        if(_response.data.task_status === 'success') {
-          clearInterval(intervalCallback)
-          const imgUrl = _response.data.content
-          res.set({
-            'Content-Type': 'application/json',
+        try {
+          const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
+              {
+              headers: {
+                  "Authorization": `Bearer ${authToken}`,
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+              },
+              responseType: 'json'
+              }
+          )
+          if(_response.data.task_status === 'success') {
+            clearInterval(intervalCallback)
+            const imgUrl = _response.data.content
+            res.set({
+              'Content-Type': 'application/json',
+            })
+            res.json({
+              "created": new Date().getTime(),
+              "model": req.body.model,
+              "choices": [
+                  {
+                      "index": 0,
+                      "message": {
+                          "role": "assistant",
+                          "content": "[image](" + imgUrl + ")"
+                      },
+                      "finish_reason": "stop"
+                  }
+              ]
           })
-          res.json({
-            "created": new Date().getTime(),
-            "model": req.body.model,
-            "choices": [
-                {
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": "[image](" + imgUrl + ")"
-                    },
-                    "finish_reason": "stop"
-                }
-            ]
-        })
+          }
+        } catch (err) {
+          console.error("Request failed:", err.response?.status, err.response?.data)
+          _count--
         }
         if(_count==0){
           clearInterval(intervalCallback)

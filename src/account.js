@@ -7,6 +7,17 @@ class Account {
     this.currentIndex = 0
     this.requestNumber = 0
     this.checkAllAccountTokens()
+    this.models = [
+      "qwen-max-latest",
+      "qwen-plus-latest",
+      "qwen2.5-vl-72b-instruct",
+      "qwen2.5-14b-instruct-1m",
+      "qvq-72b-preview",
+      "qwq-32b-preview",
+      "qwen2.5-coder-32b-instruct",
+      "qwen-turbo-latest",
+      "qwen2.5-72b-instruct"
+    ]
   }
 
   init(accountTokens) {
@@ -62,6 +73,27 @@ class Account {
 
   getErrorAccountTokensNumber() {
     return this.errorAccountTokens.length
+  }
+
+  async getModelList() {
+    const modelsList = []
+    for (const item of this.models) {
+      modelsList.push(item)
+      modelsList.push(item + '-thinking')
+      modelsList.push(item + '-search')
+      modelsList.push(item + '-thinking-search')
+    }
+    const models = {
+      "object": "list",
+      "data": modelsList.map(item => ({
+        "id": item,
+        "object": "model",
+        "created": new Date().getTime(),
+        "owned_by": "qwenlm"
+      })),
+      "object": "list"
+    }
+    return models
   }
 }
 

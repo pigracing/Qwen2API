@@ -328,7 +328,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
           })
         }
         _count--
-      },1000)
+      },3000)
       
     } catch (error) {
       console.log(error)
@@ -364,6 +364,10 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       t2iEnabled = true
       chatType = 't2i'
       messages[messages.length - 1].chat_type = 't2i'
+      messages[messages.length - 1].extra = {}
+      messages[messages.length - 1].role = 'user'
+      messages[messages.length - 1].feature_config = {"thinking_enabled": false}
+      req.body.size = '1024*1024'
       req.body.model = req.body.model.replace('-t2i', '')
     }
 

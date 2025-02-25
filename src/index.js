@@ -288,10 +288,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
   const notStreamResponseT2I = async (response) => {
     try {
       const taskId = response.messages[1].extra.wanx.task_id
-      console.log(taskId)
-      let _count = 10;
       const intervalCallback = setInterval(async () => {
-        const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
+        const _response = await axios.post('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
             {
             headers: {
                 "Authorization": `Bearer ${authToken}`,
@@ -300,7 +298,6 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
             responseType: 'json'
             }
         )
-        console.log(_response.data)
         if(_response.data.task_status === 'success') {
           clearInterval(intervalCallback)
           const imgUrl = _response.data.content
@@ -322,15 +319,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
             ]
         })
         }
-        if(_count==0){
-          clearInterval(intervalCallback)
-          res.status(500)
-          .json({
-            error: "服务错误!!!"
-          })
-        }
-        _count--
-      },3000)
+      },1000)
       
     } catch (error) {
       console.log(error)
@@ -361,6 +350,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       req.body.model = req.body.model.replace('-search', '')
     }
 
+    let response 
+
     let t2iEnabled = false
     if (req.body.model.includes('-t2i')) {
       t2iEnabled = true
@@ -370,25 +361,42 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       messages[messages.length - 1].content = messages[messages.length - 1].content[0].text
       messages[messages.length - 1].role = 'user'
       messages[messages.length - 1].feature_config = {"thinking_enabled": false}
-      req.body.size = '1024*1024'
       req.body.model = req.body.model.replace('-t2i', '')
+      response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
+        {
+          "model": req.body.model,
+          "messages": messages,
+          "stream": false,
+          "chat_type": chatType,
+          "size":"1024*1024"
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          },
+          responseType: 'json'
+        }
+      )
+    }else{
+        response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
+            {
+                "model": req.body.model,
+                "messages": messages,
+                "stream": stream,
+                "chat_type": chatType
+            },
+            {
+                headers: {
+                "Authorization": `Bearer ${authToken}`,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                },
+                responseType: stream ? 'stream' : 'json'
+            }
+        )
     }
 
-    const response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
-      {
-        "model": req.body.model,
-        "messages": messages,
-        "stream": stream,
-        "chat_type": chatType
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${authToken}`,
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        },
-        responseType: stream ? 'stream' : 'json'
-      }
-    )
+    
 
     if(t2iEnabled){
         notStreamResponseT2I(response.data)

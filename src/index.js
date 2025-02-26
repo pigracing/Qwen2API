@@ -454,7 +454,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 const startInfo = `
 -------------------------------------------------------------------
 监听地址：${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : 'localhost'}
-服务端口：${process.env.SERVICE_PORT ? process.env.SERVICE_PORT || 3000}
+服务端口：${process.env.SERVICE_PORT ? process.env.SERVICE_PORT || '3000'}
 API前缀：${process.env.API_PREFIX ? process.env.API_PREFIX : '未设置'}
 账户数：${accountManager ? accountManager.getAccountTokensNumber() : '未启用'}
 -------------------------------------------------------------------

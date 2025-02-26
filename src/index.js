@@ -377,8 +377,6 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       chatType = 't2i'
       messages[messages.length - 1].chat_type = 't2i'
       messages[messages.length - 1].extra = {}
-      messages[messages.length - 1].content = messages[messages.length - 1].content[0].text
-      messages[messages.length - 1].role = 'user'
       messages[messages.length - 1].feature_config = {"thinking_enabled": false}
       req.body.model = req.body.model.replace('-t2i', '')
       

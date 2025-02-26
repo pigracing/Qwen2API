@@ -42,7 +42,7 @@ app.get('/', async (req, res) => {
     let html = fs.readFileSync(path.join(__dirname, 'home.html'), 'utf-8')
     if (accountManager) {
       res.setHeader('Content-Type', 'text/html')
-      html = html.replace('BASE_URL', `http://${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : "localhost"}:${process.env.SERVICE_PORT}${process.env.API_PREFIX ? process.env.API_PREFIX : ''}`)
+      html = html.replace('BASE_URL', `http://${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : "localhost"}:${process.env.SERVICE_PORT ? process.env.SERVICE_PORT:'3000'}${process.env.API_PREFIX ? process.env.API_PREFIX : ''}`)
       html = html.replace('RequestNumber', accountManager.getRequestNumber())
       html = html.replace('SuccessAccountNumber', accountManager.getAccountTokensNumber())
       html = html.replace('ErrorAccountNumber', accountManager.getErrorAccountTokensNumber())
@@ -289,7 +289,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
     try {
       const taskId = response.messages[1].extra.wanx.task_id
       const chatId = response.chat_id
-      let _count = 6
+      let _count = 12  //设置轮询查询每5秒查一次图片是否已生成，尝试12次，60秒之后还未生成的直接返回超时重试
+      console.log("正在生成图片,"+taskId)
       const intervalCallback = setInterval(async () => {
         try {
           if(_count==0){
@@ -328,6 +329,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
                   }
               ]
           })
+            console.log("结束生成图片,"+taskId)
           }
         } catch (err) {
           console.error("Request failed:", err.response?.status, err.response?.data,'https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId)

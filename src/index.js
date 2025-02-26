@@ -301,7 +301,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
               })
            }
           
-          const _response = await axios.post('https://chat.qwenlm.ai/api/v1/chats/'+chatId,
+          const _chatResponse = await axios.post('https://chat.qwenlm.ai/api/v1/chats/'+chatId,
               {
                 "chat": {
                   "chat_type": '',
@@ -320,7 +320,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
               responseType: 'json'
               }
           )
-          console.log(_response)
+          console.log(_chatResponse)
           
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {

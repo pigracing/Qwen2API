@@ -436,6 +436,9 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
                 responseType: stream ? 'stream' : 'json'
             }
         )
+        console.log(0000)
+        console.log(response)
+        console.log(1111)
     }
 
     

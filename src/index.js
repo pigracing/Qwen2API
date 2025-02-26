@@ -287,12 +287,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
   const notStreamResponseT2I = async (response,_id) => {
     try {
-      console.log(123)
       const taskId = response.messages[1].extra.wanx.task_id
       const chatId = response.chat_id
-      console.log(chatId)
-      console.log(234)
-      console.log(response)
       let _count = 6
       const intervalCallback = setInterval(async () => {
         try {
@@ -300,17 +296,15 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
               clearInterval(intervalCallback)
               res.status(500)
               .json({
-                error: "服务错误!!!"
+                error: "超时，请重试！"
               })
            }
-          console.log(process.env.ACCOUNT_COOKIES)
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {
               headers: {
                   "Authorization": `Bearer ${authToken}`,
                   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                  "Cookie": `${process.env.ACCOUNT_COOKIES}`
+                  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
               }
               }
           )
@@ -419,10 +413,6 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
                 responseType: stream ? 'stream' : 'json'
             }
         )
-        console.log(0000)
-        console.log(response)
-        console.log(response.choices[0].message)
-        console.log(1111)
     }
 
     

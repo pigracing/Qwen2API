@@ -289,16 +289,39 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
     try {
       console.log(response)
       const taskId = response.messages[1].extra.wanx.task_id
+      const chatId = response.chat_id
       let _count = 6
       const intervalCallback = setInterval(async () => {
         try {
-        if(_count==0){
-            clearInterval(intervalCallback)
-            res.status(500)
-            .json({
-              error: "服务错误!!!"
-            })
-         }
+          if(_count==0){
+              clearInterval(intervalCallback)
+              res.status(500)
+              .json({
+                error: "服务错误!!!"
+              })
+           }
+          
+          const _response = await axios.post('https://chat.qwenlm.ai/api/v1/chats/'+chatId,
+              {
+                "chat": {
+                  "chat_type": '',
+                  "messages": messages,
+                  "history": {},
+                  "models": [req.body.model],
+                  "files":[],
+                  "params":{"textToImage":{"ratio":"1:1","active":true}}
+                }
+              },
+              {
+              headers: {
+                  "Authorization": `Bearer ${authToken}`,
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+              },
+              responseType: 'json'
+              }
+          )
+          console.log(_response)
+          
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {
               headers: {

@@ -1,6 +1,8 @@
 # Qwen2API
 
-Qwen2API 是一个基于 Node.js 的 API 服务，提供聊天模型的接口以及图像上传功能。
+在原作者的基础上新增了图像生成的功能
+
+Qwen2API 是一个基于 Node.js 的 API 服务，提供聊天模型的接口、图像生成、图像上传功能。   
 
 ## 目录结构
 
@@ -107,7 +109,8 @@ Qwen2API/
 
 ### 复制 Hugging Face 空间
 
-- [Qwen2API](https://huggingface.co/spaces/devme/q2waepnilm)
+- [Qwen2API](https://huggingface.co/spaces/devme/q2waepnilm)  原作者的空间
+- [Qwen2API-文生图](https://huggingface.co/spaces/nanoppa/q2waepnilm) 我的空间
 
 ## API 端点
 
@@ -154,6 +157,11 @@ Qwen2API/
 ### 上传图像
 
 在发送聊天消息时，如果消息包含图像，API 会自动处理图像上传。
+
+### 文生图
+
+在模型名后添加"-t2i"进入画画模式
+> 示例：qwen-max-latest-t2i
 
 ### 模型启用推理或搜索
 

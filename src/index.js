@@ -287,9 +287,12 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
   const notStreamResponseT2I = async (response) => {
     try {
-      console.log(response)
+      console.log(123)
       const taskId = response.messages[1].extra.wanx.task_id
       const chatId = response.chat_id
+      console.log(chatId)
+      console.log(234)
+      console.log(response)
       let _count = 6
       const intervalCallback = setInterval(async () => {
         try {
@@ -320,8 +323,9 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
               responseType: 'json'
               }
           )
+          console.log(789)
           console.log(_chatResponse)
-          
+          console.log(012)
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {
               headers: {

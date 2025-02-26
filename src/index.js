@@ -285,7 +285,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
   }
 
-  const notStreamResponseT2I = async (response) => {
+  const notStreamResponseT2I = async (response,_id) => {
     try {
       console.log(123)
       const taskId = response.messages[1].extra.wanx.task_id
@@ -373,6 +373,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 
     let response 
 
+    let _id = `${uuid.v4()}`
+
     let t2iEnabled = false
     if (req.body.model.includes('-t2i')) {
       t2iEnabled = true
@@ -383,12 +385,14 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
       messages[messages.length - 1].role = 'user'
       messages[messages.length - 1].feature_config = {"thinking_enabled": false}
       req.body.model = req.body.model.replace('-t2i', '')
+      
       response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
           "model": req.body.model,
           "messages": messages,
           "stream": false,
           "chat_type": chatType,
+          "id": _id
           "size":"1024*1024"
         },
         {
@@ -422,9 +426,8 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
     }
 
     
-
     if(t2iEnabled){
-        notStreamResponseT2I(response.data)
+        notStreamResponseT2I(response.data,_id)
     }else{
         if (stream) {
         res.set({

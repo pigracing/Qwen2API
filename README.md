@@ -66,13 +66,13 @@ Qwen2API/
 1. 使用 Docker 命令：
 
    ```bash
-   docker run -d -p 3000:3000 -e API_KEY=sk-123456 -e ACCOUNT_TOKENS=ey1...,ey2...,ey3... --name qwen2api rfym21/qwen2api:latest
+   docker run -d -p 3000:3000 -e API_KEY=sk-123456 -e ACCOUNT_TOKENS=ey1...,ey2...,ey3... --name qwen2api ricebug/qwen2api:latest
    ```
 
 2. 使用 docker-compose 运行服务：
 
    ```bash
-   curl -o docker-compose.yml https://raw.githubusercontent.com/Rfym21/Qwen2API/refs/heads/main/docker-compose.yml
+   curl -o docker-compose.yml https://raw.githubusercontent.com/pigracing/Qwen2API/refs/heads/main/docker-compose.yml
    docker compose pull && docker compose up -d
    ```
 
@@ -81,7 +81,7 @@ Qwen2API/
 2. 下载仓库文件：
 
    ```bash
-   git clone https://github.com/Rfym21/Qwen2API
+   git clone https://github.com/pigracing/Qwen2API
    cd Qwen2API
    ```
 

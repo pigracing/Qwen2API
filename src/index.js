@@ -303,36 +303,15 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
                 error: "服务错误!!!"
               })
            }
-          
-          const _chatResponse = await axios.post('https://chat.qwenlm.ai/api/v1/chats/'+chatId,
-              {
-                "chat": {
-                  "chat_type": '',
-                  "messages": messages,
-                  "history": {},
-                  "models": [req.body.model],
-                  "files":[],
-                  "params":{"textToImage":{"ratio":"1:1","active":true}}
-                }
-              },
-              {
-              headers: {
-                  "Authorization": `Bearer ${authToken}`,
-                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-              },
-              responseType: 'json'
-              }
-          )
-          console.log(789)
-          console.log(_chatResponse)
-          console.log(012)
+          console.log(process.env.ACCOUNT_COOKIES)
           const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
               {
               headers: {
                   "Authorization": `Bearer ${authToken}`,
-                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-              },
-              responseType: 'json'
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                  "Cookie": `${process.env.ACCOUNT_COOKIES}`
+              }
               }
           )
           if(_response.data.task_status === 'success') {
@@ -438,6 +417,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
         )
         console.log(0000)
         console.log(response)
+        console.log(response.choices[0].message)
         console.log(1111)
     }
 
@@ -474,7 +454,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
 const startInfo = `
 -------------------------------------------------------------------
 监听地址：${process.env.LISTEN_ADDRESS ? process.env.LISTEN_ADDRESS : 'localhost'}
-服务端口：${process.env.SERVICE_PORT}
+服务端口：${process.env.SERVICE_PORT ? process.env.SERVICE_PORT || 3000}
 API前缀：${process.env.API_PREFIX ? process.env.API_PREFIX : '未设置'}
 账户数：${accountManager ? accountManager.getAccountTokensNumber() : '未启用'}
 -------------------------------------------------------------------

@@ -180,110 +180,86 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const streamResponse = async (response) => {
     try {
-      const id = uuid.v4()
-      const decoder = new TextDecoder('utf-8')
-      let backContent = null
-      let webSearchInfo = null
-      let temp_content = ''
+        const id = uuid.v4()
+        const decoder = new TextDecoder('utf-8')
+        let backContent = null
+        let webSearchInfo = null
+        let temp_content = ''
 
-      response.on('data', async (chunk) => {
-        const decodeText = decoder.decode(chunk)
-        // console.log(decodeText)
-        const lists = decodeText.split('\n').filter(item => item.trim() !== '')
-        for (const item of lists) {
-          try {
+        response.on('data', async (chunk) => {
+            const decodeText = decoder.decode(chunk, { stream: true })
+            const lists = decodeText.split('\n').filter(item => item.trim() !== '')
+            for (const item of lists) {
+                try {
+                    let decodeJson = isJson(item.replace("data: ", '')) ? JSON.parse(item.replace("data: ", '')) : null
+                    if (decodeJson === null) {
+                        temp_content += item
+                        decodeJson = isJson(temp_content.replace("data: ", '')) ? JSON.parse(temp_content.replace("data: ", '')) : null
+                        if (decodeJson === null) {
+                            continue
+                        }
+                        temp_content = ''
+                    }
 
-            let decodeJson = isJson(item.replace("data: ", '')) ? JSON.parse(item.replace("data: ", '')) : null
+                    // 处理 web_search 信息
+                    if (decodeJson.choices[0].delta.name === 'web_search') {
+                        webSearchInfo = decodeJson.choices[0].delta.extra.web_search_info
+                    }
 
-            if (decodeJson === null) {
-              temp_content += item
-              decodeJson = isJson(temp_content.replace("data: ", '')) ? JSON.parse(temp_content.replace("data: ", '')) : null
-              if (decodeJson === null) {
-                continue
-              }
-              temp_content = ''
-            }
+                    // 处理内容
+                    let content = decodeJson.choices[0].delta.content
+                    if (backContent !== null) {
+                        content = content.replace(backContent, '')
+                    }
+                    backContent = decodeJson.choices[0].delta.content
 
-            if (decodeJson.choices[0].delta.name === 'web_search') {
-              webSearchInfo = decodeJson.choices[0].delta.extra.web_search_info
-              // console.log(webSearchInfo)
-            }
-
-            let content = decodeJson.choices[0].delta.content
-            console.log(content)
-            
-
-            if (backContent === null) {
-              backContent = content
-            } else {
-              const temp = content
-              content = await content.replace(backContent, '')
-              backContent = temp
-            } 
-
-
-            const StreamTemplate = {
-              "id": `chatcmpl-${id}`,
-              "object": "chat.completion.chunk",
-              "created": new Date().getTime(),
-              "choices": [
-                {
-                  "index": 0,
-                  "delta": {
-                    "content": content
-                  },
-                  "finish_reason": null
+                    const StreamTemplate = {
+                        "id": `chatcmpl-${id}`,
+                        "object": "chat.completion.chunk",
+                        "created": new Date().getTime(),
+                        "choices": [
+                            {
+                                "index": 0,
+                                "delta": {
+                                    "content": content
+                                },
+                                "finish_reason": null
+                            }
+                        ]
+                    }
+                    res.write(`data: ${JSON.stringify(StreamTemplate)}\n\n`)
+                } catch (error) {
+                    console.log(error)
+                    res.status(500).json({ error: "服务错误!!!" })
                 }
-              ]
             }
-            res.write(`data: ${JSON.stringify(StreamTemplate)}\n\n`)
-          } catch (error) {
-            console.log(error)
-            res.status(500)
-              .json({
-                error: "服务错误!!!"
-              })
-          }
-        }
-      })
-
-      response.on('end', () => {
-        // console.log(webSearchInfo)
-
-        if (webSearchInfo) {
-          const webSearchTable = `
-
-
-
-${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www.baidu.com"})`).join('\n')}`
-
-          res.write(`data: ${JSON.stringify({
-            "id": `chatcmpl-${id}`,
-            "object": "chat.completion.chunk",
-            "created": new Date().getTime(),
-            "choices": [
-              {
-                "index": 0,
-                "delta": {
-                  "content": webSearchTable
-                }
-              }
-            ]
-          })}\n\n`)
-        }
-        res.write(`data: [DONE]\n\n`)
-        res.end()
-      })
-
-    } catch (error) {
-      console.log(error)
-      res.status(500)
-        .json({
-          error: "服务错误!!!"
         })
-    }
 
-  }
+        response.on('end', async () => {
+            if (webSearchInfo) {
+                const webSearchTable = await accountManager.generateMarkdownTable(webSearchInfo)
+                res.write(`data: ${JSON.stringify({
+                    "id": `chatcmpl-${id}`,
+                    "object": "chat.completion.chunk",
+                    "created": new Date().getTime(),
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {
+                                "content": `\n\n\n---\n\n### 搜索结果\n\n${webSearchTable}\n\n---`
+                            }
+                        }
+                    ]
+                })}\n\n`)
+            }
+            res.write(`data: [DONE]\n\n`)
+            res.end()
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: "服务错误!!!" })
+    }
+}
 
   const notStreamResponseT2I = async (response,_id) => {
     try {

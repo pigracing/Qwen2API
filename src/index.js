@@ -392,7 +392,7 @@ ${webSearchInfo.map(item => `[${item.title || "URL"}](${item.url || "https://www
           "messages": messages,
           "stream": false,
           "chat_type": chatType,
-          "id": _id
+          "id": _id,
           "size":"1024*1024"
         },
         {

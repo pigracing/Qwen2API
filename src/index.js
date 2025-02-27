@@ -390,7 +390,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         }
       )
     }else{
-        const response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
+        response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
             "model": req.body.model,
             "messages": messages,

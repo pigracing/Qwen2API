@@ -95,35 +95,33 @@ class Account {
     }
     return models
   }
-  async generateMarkdownTable(websites) {
+  async generateMarkdownTable(websites, mode) {
     // 输入校验
     if (!Array.isArray(websites) || websites.length === 0) {
       return ""
     }
-
-    // 表头
-    let markdown = "| **序号** | **网站标题** | **网站URL** | **网站Logo** | **网站摘要** | **来源** | **日期** |\n"
-    markdown += "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n"
-
+    
+    let markdown = ""
+    if (mode === "table"){        
+        markdown += "| **序号** | **网站URL** | **来源** |\n"
+        markdown += "|:---|:---|:---|\n"
+    }
     // 默认值
-    const DEFAULT_HOSTLOGO = "https://s2.loli.net/2025/02/26/9OIlJhY5wTVo4EQ.png"
-    const DEFAULT_TITLE = "未获取到标题"
+    const DEFAULT_TITLE = "未知标题"
     const DEFAULT_URL = "https://www.baidu.com"
-    const DEFAULT_SNIPPET = "未获取到摘要"
-    const DEFAULT_HOSTNAME = "未知"
-    const DEFAULT_DATE = "未知"
+    const DEFAULT_HOSTNAME = "未知来源"
 
     // 表格内容
     websites.forEach((site, index) => {
-      const { title, url, hostlogo, snippet, hostname, date } = site
+      const { title, url, hostname } = site
       // 处理字段值，若为空则使用默认值
-      const titleCell = `${this.escapeMarkdown(title || DEFAULT_TITLE)}`
-      const urlCell = `[${this.escapeMarkdown(url || DEFAULT_URL)}](${url || DEFAULT_URL})`
-      const logoCell = `![${this.escapeMarkdown(title || DEFAULT_TITLE)} Logo](${hostlogo || DEFAULT_HOSTLOGO})`
-      const snippetCell = this.escapeMarkdown(snippet || DEFAULT_SNIPPET)
+      const urlCell = `[${this.escapeMarkdown(title || DEFAULT_TITLE)}](${url || DEFAULT_URL})`
       const hostnameCell = this.escapeMarkdown(hostname || DEFAULT_HOSTNAME)
-      const dateCell = this.escapeMarkdown(date || DEFAULT_DATE)
-      markdown += `| ${index + 1} | ${titleCell} | ${urlCell} | ${logoCell} | ${snippetCell} | ${hostnameCell} | ${dateCell} |\n`
+      if (mode === "table"){
+        markdown += `| ${index + 1} | ${urlCell} | ${hostnameCell} |\n`
+      } else {
+        markdown += `[${index + 1}] ${urlCell} | 来源: ${hostnameCell}\n`
+      }
     })
 
     return markdown

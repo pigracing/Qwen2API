@@ -374,13 +374,13 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
       const _userPrompt = messages[messages.length - 1].content
       let _size = "1024*1024"
-      if (_userPrompt.indexOf("4:3")){
+      if (_userPrompt.indexOf("4:3")!=-1){
           _size = "1024*768"
-      }else if (_userPrompt.indexOf("3:4")){
+      }else if (_userPrompt.indexOf("3:4")!=-1){
           _size = "768*1024"
-      }else if (_userPrompt.indexOf("16:9")){
+      }else if (_userPrompt.indexOf("16:9")!=-1){
           _size = "1280*720"
-      }else if (_userPrompt.indexOf("9:16")){
+      }else if (_userPrompt.indexOf("9:16")!=-1){
           _size = "720*1280"
       }
       

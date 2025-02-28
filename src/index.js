@@ -85,6 +85,7 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
     const modelsList = []
     for (const item of modelsList_response) {
       modelsList.push(item.id)
+      modelsList.push('qwen-max-latest-t2i')
       modelsList.push(item.id + '-thinking')
       modelsList.push(item.id + '-search')
       modelsList.push(item.id + '-thinking-search')

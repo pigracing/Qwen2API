@@ -371,6 +371,18 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       messages[messages.length - 1].extra = {}
       messages[messages.length - 1].feature_config = {"thinking_enabled": false}
       req.body.model = req.body.model.replace('-t2i', '')
+
+      const _userPrompt = messages[messages.length - 1].content
+      let _size = "1024*1024"
+      if (_userPrompt.indexOf("4:3")){
+          _size = "1024*768"
+      }else if (_userPrompt.indexOf("3:4")){
+          _size = "768*1024"
+      }else if (_userPrompt.indexOf("16:9")){
+          _size = "1280*720"
+      }else if (_userPrompt.indexOf("9:16")){
+          _size = "720*1280"
+      }
       
       response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
@@ -379,7 +391,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           "stream": false,
           "chat_type": chatType,
           "id": _id,
-          "size":"1024*1024"
+          "size": _size
         },
         {
           headers: {

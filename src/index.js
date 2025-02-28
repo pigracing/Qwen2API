@@ -318,7 +318,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
                       "index": 0,
                       "message": {
                           "role": "assistant",
-                          "content": imgUrl
+                          "content": "[image](" + imgUrl + ")"
                       },
                       "finish_reason": "stop"
                   }

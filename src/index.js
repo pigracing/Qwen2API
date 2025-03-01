@@ -146,6 +146,16 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
+      console.log(response)
+      let _webSearchInfo = response.webSearchInfo
+      let _content = response.choices[0].message.content
+      if(_webSearchInfo!=undefined){
+        for(let i=0;i<_webSearchInfo.length;i++){
+          // 构建匹配 [[n]] 的正则表达式
+          let pattern = new RegExp(`\\[\\[${n}\\]\\]`, 'g');
+          _content = _content.replace(pattern, _webSearchInfo[i].url);
+        }
+      }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,
         "object": "chat.completion",
@@ -156,7 +166,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             "index": 0,
             "message": {
               "role": "assistant",
-              "content": response.choices[0].message.content
+              "content": _content
             },
             "finish_reason": "stop"
           }
@@ -424,17 +434,17 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         notStreamResponseT2I(response.data)
     }else{
         if (stream) {
-        res.set({
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-        })
-        streamResponse(response.data, thinkingEnabled)
+          res.set({
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+          })
+          streamResponse(response.data, thinkingEnabled)
         } else {
-        res.set({
-            'Content-Type': 'application/json',
-        })
-        notStreamResponse(response.data)
+          res.set({
+              'Content-Type': 'application/json',
+          })
+          notStreamResponse(response.data)
         }
     }
 

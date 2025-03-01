@@ -166,7 +166,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      traverseObject(response)
+      //traverseObject(response)
       let _webSearchInfo = response.webSearchInfo
       let _content = response.choices[0].message.content
       if(_webSearchInfo!=undefined){
@@ -464,6 +464,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           res.set({
               'Content-Type': 'application/json',
           })
+          traverseObject(response)
           notStreamResponse(response.data)
         }
     }

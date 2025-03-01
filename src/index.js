@@ -144,6 +144,9 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
   const stream = req.body.stream
 
+  let _id = `${uuid.v4()}`
+  let _chatId = `${uuid.v4()}`
+
   function traverseObject(obj, indent = 0) {
     // 获取对象的所有自身属性
     const keys = Object.keys(obj);
@@ -166,14 +169,28 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      //traverseObject(response)
-      let _webSearchInfo = response.webSearchInfo
-      let _content = response.choices[0].message.content
-      if(_webSearchInfo!=undefined){
-        for(let i=0;i<_webSearchInfo.length;i++){
-          // 构建匹配 [[i]] 的正则表达式
-          let pattern = new RegExp(`\\[\\[${i+1}\\]\\]`, 'g');
-          _content = _content.replace(pattern, _webSearchInfo[i].url);
+      if (req.body.model.includes('-search')){
+        console.log(_chatId)
+        _cResponse = await axios.post('https://chat.qwenlm.ai/api/chat/completions/'+_chatId,
+          {
+            headers: {
+              "Authorization": `Bearer ${authToken}`,
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            responseType: 'json'
+          }
+        )
+        console.log(_cResponse.data.chat)
+        //traverseObject(response)
+        let _webSearchInfo = _cResponse.data.chat.messages[messages.length-1].webSearchInfo
+        console.log(_webSearchInfo)
+        let _content = response.choices[0].message.content
+        if(_webSearchInfo!=undefined){
+          for(let i=0;i<_webSearchInfo.length;i++){
+            // 构建匹配 [[i]] 的正则表达式
+            let pattern = new RegExp(`\\[\\[${i+1}\\]\\]`, 'g');
+            _content = _content.replace(pattern, _webSearchInfo[i].url);
+          }
         }
       }
       const bodyTemplate = {
@@ -392,7 +409,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
     let response 
 
-    let _id = `${uuid.v4()}`
+
 
     let t2iEnabled = false
     if (req.body.model.includes('-t2i')) {
@@ -435,6 +452,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
     }else{
         response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
+            "id":_id,
+            "chat_id":_chatId,
             "model": req.body.model,
             "messages": messages,
             "stream": stream,
@@ -464,7 +483,6 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           res.set({
               'Content-Type': 'application/json',
           })
-          traverseObject(response)
           notStreamResponse(response.data)
         }
     }

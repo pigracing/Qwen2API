@@ -146,13 +146,13 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      console.log(response)
+      console.log(response.webSearchInfo)
       let _webSearchInfo = response.webSearchInfo
       let _content = response.choices[0].message.content
       if(_webSearchInfo!=undefined){
         for(let i=0;i<_webSearchInfo.length;i++){
-          // 构建匹配 [[n]] 的正则表达式
-          let pattern = new RegExp(`\\[\\[${n}\\]\\]`, 'g');
+          // 构建匹配 [[i]] 的正则表达式
+          let pattern = new RegExp(`\\[\\[${i+1}\\]\\]`, 'g');
           _content = _content.replace(pattern, _webSearchInfo[i].url);
         }
       }

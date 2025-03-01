@@ -144,60 +144,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
   const stream = req.body.stream
 
-  // 判断是否开启推理
-  let thinkingEnabled = false
-
-  let searchEnabled = false
-
-  let _id = `${uuid.v4()}`
-  let _chatId = `${uuid.v4()}`
-
-  function traverseObject(obj, indent = 0) {
-    // 获取对象的所有自身属性
-    const keys = Object.keys(obj);
-  
-    // 遍历每个属性
-    keys.forEach(key => {
-      const value = obj[key];
-      const padding = ' '.repeat(indent); // 根据缩进级别添加空格
-  
-      if (typeof value === 'object' && value !== null) {
-        // 如果属性值是对象，递归遍历
-        console.log(`${padding}${key}:`);
-        traverseObject(value, indent + 2); // 增加缩进级别
-      } else {
-        // 如果属性值是基本类型，直接输出
-        console.log(`${padding}${key}: ${value}`);
-      }
-    });
-  }
-
   const notStreamResponse = async (response) => {
     try {
-      let _content = response.choices[0].message.content
-      if (searchEnabled){
-        console.log(_chatId)
-        _cResponse = await axios.post('https://chat.qwenlm.ai/api/chat/completions/'+_chatId,
-          {
-            headers: {
-              "Authorization": `Bearer ${authToken}`,
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            },
-            responseType: 'json'
-          }
-        )
-        console.log(_cResponse.data.chat)
-        //traverseObject(response)
-        let _webSearchInfo = _cResponse.data.chat.messages[messages.length-1].webSearchInfo
-        console.log(_webSearchInfo)
-        if(_webSearchInfo!=undefined){
-          for(let i=0;i<_webSearchInfo.length;i++){
-            // 构建匹配 [[i]] 的正则表达式
-            let pattern = new RegExp(`\\[\\[${i+1}\\]\\]`, 'g');
-            _content = _content.replace(pattern, _webSearchInfo[i].url);
-          }
-        }
-      }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,
         "object": "chat.completion",
@@ -208,7 +156,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             "index": 0,
             "message": {
               "role": "assistant",
-              "content": _content
+              "content": response.choices[0].message.content
             },
             "finish_reason": "stop"
           }
@@ -395,7 +343,9 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
 
   try {
-   
+
+    // 判断是否开启推理
+    let thinkingEnabled = false
     if (req.body.model.includes('-thinking')) {
       thinkingEnabled = true
       messages[messages.length - 1].feature_config = {
@@ -403,7 +353,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       }
       req.body.model = req.body.model.replace('-thinking', '')
     }
-
+    let searchEnabled = false
     if (req.body.model.includes('-search')) {
       searchEnabled = true
       messages[messages.length - 1].chat_type = 'search'
@@ -412,7 +362,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
     let response 
 
-
+    let _id = `${uuid.v4()}`
 
     let t2iEnabled = false
     if (req.body.model.includes('-t2i')) {
@@ -455,8 +405,6 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
     }else{
         response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
-            "id":_id,
-            "chat_id":_chatId,
             "model": req.body.model,
             "messages": messages,
             "stream": stream,
@@ -476,17 +424,17 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         notStreamResponseT2I(response.data)
     }else{
         if (stream) {
-          res.set({
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
-          })
-          streamResponse(response.data, thinkingEnabled)
+        res.set({
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        })
+        streamResponse(response.data, thinkingEnabled)
         } else {
-          res.set({
-              'Content-Type': 'application/json',
-          })
-          notStreamResponse(response.data)
+        res.set({
+            'Content-Type': 'application/json',
+        })
+        notStreamResponse(response.data)
         }
     }
 

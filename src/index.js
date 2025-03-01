@@ -144,13 +144,29 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
   const stream = req.body.stream
 
+  function traverseObject(obj, indent = 0) {
+    // 获取对象的所有自身属性
+    const keys = Object.keys(obj);
+  
+    // 遍历每个属性
+    keys.forEach(key => {
+      const value = obj[key];
+      const padding = ' '.repeat(indent); // 根据缩进级别添加空格
+  
+      if (typeof value === 'object' && value !== null) {
+        // 如果属性值是对象，递归遍历
+        console.log(`${padding}${key}:`);
+        traverseObject(value, indent + 2); // 增加缩进级别
+      } else {
+        // 如果属性值是基本类型，直接输出
+        console.log(`${padding}${key}: ${value}`);
+      }
+    });
+  }
+
   const notStreamResponse = async (response) => {
     try {
-      for (let key in response) {
-        if (response.hasOwnProperty(key)) {
-          console.log(key + ": " + response[key]);
-        }
-      }
+      traverseObject(response)
       let _webSearchInfo = response.webSearchInfo
       let _content = response.choices[0].message.content
       if(_webSearchInfo!=undefined){

@@ -146,7 +146,11 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      console.log(json.dumps(response,ensure_ascii=False))
+      for (let key in response) {
+        if (response.hasOwnProperty(key)) {
+          console.log(key + ": " + response[key]);
+        }
+      }
       let _webSearchInfo = response.webSearchInfo
       let _content = response.choices[0].message.content
       if(_webSearchInfo!=undefined){

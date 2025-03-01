@@ -144,6 +144,11 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
   const stream = req.body.stream
 
+  // 判断是否开启推理
+  let thinkingEnabled = false
+
+  let searchEnabled = false
+
   let _id = `${uuid.v4()}`
   let _chatId = `${uuid.v4()}`
 
@@ -169,7 +174,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      if (req.body.model.includes('-search')){
+      let _content = response.choices[0].message.content
+      if (searchEnabled){
         console.log(_chatId)
         _cResponse = await axios.post('https://chat.qwenlm.ai/api/chat/completions/'+_chatId,
           {
@@ -184,7 +190,6 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         //traverseObject(response)
         let _webSearchInfo = _cResponse.data.chat.messages[messages.length-1].webSearchInfo
         console.log(_webSearchInfo)
-        let _content = response.choices[0].message.content
         if(_webSearchInfo!=undefined){
           for(let i=0;i<_webSearchInfo.length;i++){
             // 构建匹配 [[i]] 的正则表达式
@@ -390,9 +395,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
 
   try {
-
-    // 判断是否开启推理
-    let thinkingEnabled = false
+   
     if (req.body.model.includes('-thinking')) {
       thinkingEnabled = true
       messages[messages.length - 1].feature_config = {
@@ -400,7 +403,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       }
       req.body.model = req.body.model.replace('-thinking', '')
     }
-    let searchEnabled = false
+
     if (req.body.model.includes('-search')) {
       searchEnabled = true
       messages[messages.length - 1].chat_type = 'search'

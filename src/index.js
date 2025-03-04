@@ -86,6 +86,7 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
     for (const item of modelsList_response) {
       modelsList.push(item.id)
       modelsList.push('qwen-max-latest-t2i')
+      modelsList.push('qwen-max-latest-t2v')
       modelsList.push(item.id + '-thinking')
       modelsList.push(item.id + '-search')
       modelsList.push(item.id + '-thinking-search')
@@ -342,6 +343,68 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
     }
   }
 
+  const notStreamResponseT2V = async (response) => {
+    try {
+      const taskId = response.messages[1].extra.wanx.task_id
+      //const chatId = response.chat_id
+      let _count = 10  //设置轮询查询每5秒查一次图片是否已生成，尝试12次，60秒之后还未生成的直接返回超时重试
+      console.log("正在生成视频,"+taskId)
+      const intervalCallback = setInterval(async () => {
+        try {
+          if(_count==0){
+              clearInterval(intervalCallback)
+              res.status(500)
+              .json({
+                error: "超时，请重试！"
+              })
+           }
+          const _response = await axios.get('https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId,
+              {
+              headers: {
+                  "Authorization": `Bearer ${authToken}`,
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+              }
+              }
+          )
+          if(_response.data.task_status === 'success') {
+            clearInterval(intervalCallback)
+            const videoUrl = _response.data.content
+            res.set({
+              'Content-Type': 'application/json',
+            })
+            res.json({
+              "created": new Date().getTime(),
+              "model": req.body.model,
+              "choices": [
+                  {
+                      "index": 0,
+                      "message": {
+                          "role": "assistant",
+                          "content": "[video](" + videoUrl + ")"
+                      },
+                      "finish_reason": "stop"
+                  }
+              ]
+          })
+            console.log("结束生成视频,"+taskId)
+          }
+        } catch (err) {
+          console.error("Request failed:", err.response?.status, err.response?.data,'https://chat.qwenlm.ai/api/v1/tasks/status/'+taskId)
+          _count--
+        }
+        _count--
+      },60000)
+      
+    } catch (error) {
+      console.log(error)
+      res.status(500)
+        .json({
+          error: "服务错误!!!"
+        })
+    }
+  }
+
   try {
 
     // 判断是否开启推理
@@ -365,13 +428,51 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
     let _id = `${uuid.v4()}`
 
     let t2iEnabled = false
+    let t2vEnabled = false
     if (req.body.model.includes('-t2i')) {
       t2iEnabled = true
       chatType = 't2i'
-      messages[messages.length - 1].chat_type = 't2i'
+      messages[messages.length - 1].chat_type = chatType
       messages[messages.length - 1].extra = {}
       messages[messages.length - 1].feature_config = {"thinking_enabled": false}
       req.body.model = req.body.model.replace('-t2i', '')
+
+      const _userPrompt = messages[messages.length - 1].content
+      let _size = "1024*1024"
+      if (_userPrompt.indexOf("4:3")!=-1){
+          _size = "1024*768"
+      }else if (_userPrompt.indexOf("3:4")!=-1){
+          _size = "768*1024"
+      }else if (_userPrompt.indexOf("16:9")!=-1){
+          _size = "1280*720"
+      }else if (_userPrompt.indexOf("9:16")!=-1){
+          _size = "720*1280"
+      }
+      
+      response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
+        {
+          "model": req.body.model,
+          "messages": messages,
+          "stream": false,
+          "chat_type": chatType,
+          "id": _id,
+          "size": _size
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          },
+          responseType: 'json'
+        }
+      )
+    }else if (req.body.model.includes('-t2v')) {
+      t2vEnabled = true
+      chatType = 't2v'
+      messages[messages.length - 1].chat_type = chatType
+      messages[messages.length - 1].extra = {}
+      messages[messages.length - 1].feature_config = {"thinking_enabled": false}
+      req.body.model = req.body.model.replace('-t2v', '')
 
       const _userPrompt = messages[messages.length - 1].content
       let _size = "1024*1024"
@@ -422,6 +523,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
     if(t2iEnabled){
         notStreamResponseT2I(response.data)
+    }else if(t2vEnabled){
+        notStreamResponseT2V(response.data)
     }else{
         if (stream) {
         res.set({

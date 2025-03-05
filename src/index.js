@@ -84,9 +84,11 @@ app.get(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/models`, asy
     const modelsList_response = response.data.data
     const modelsList = []
     for (const item of modelsList_response) {
+      if(item.id == 'qwen-max-latest' || item.id == 'qwen-plus-latest' || item.id == 'qwen2.5-14b-instruct-1m' || item.id == 'qwen-turbo-latest' || item.id == 'qwen2.5-72b-instruct'){
+         modelsList.push(item.id+'-t2i')
+         modelsList.push(item.id+'-t2v')
+      }
       modelsList.push(item.id)
-      modelsList.push('qwen-max-latest-t2i')
-      modelsList.push('qwen-max-latest-t2v')
       modelsList.push(item.id + '-thinking')
       modelsList.push(item.id + '-search')
       modelsList.push(item.id + '-thinking-search')

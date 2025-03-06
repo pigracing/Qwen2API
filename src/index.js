@@ -522,7 +522,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         }
         )
     }
-
+    print(response.text)
     if(t2iEnabled){
         notStreamResponseT2I(response.data)
     }else if(t2vEnabled){

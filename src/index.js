@@ -450,6 +450,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       }else if (_userPrompt.indexOf("9:16")!=-1){
           _size = "720*1280"
       }
+
+      authHeaders = process.env.AUTH_HEADERS
       
       response = await axios.post('https://chat.qwenlm.ai/api/chat/completions',
         {
@@ -463,7 +465,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         {
           headers: {
             "Authorization": `Bearer ${authToken}`,
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            `${authHeaders}`
           },
           responseType: 'json'
         }

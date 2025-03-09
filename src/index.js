@@ -409,6 +409,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   try {
 
+    console.log(req.body)
+
     // 判断是否开启推理
     let thinkingEnabled = false
     if (req.body.model.includes('-thinking')) {
@@ -556,9 +558,9 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             "chat_type": searchEnabled ? 'search' : "t2t"
         },
         {
-            headers: {
-            "Authorization": `Bearer ${authToken}`,
-            "Host": "chat.qwen.ai",
+           headers: {
+           "Authorization": `Bearer ${authToken}`,
+           "Host": "chat.qwen.ai",
            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
            "Connection": "keep-alive",
            "Accept": "*/*",
@@ -579,7 +581,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
            "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
            "cookie": process.env.COOKIE,
            "priority": "u=1, i"
-          },
+         },
             responseType: stream ? 'stream' : 'json'
         }
         )
@@ -591,17 +593,17 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
         notStreamResponseT2V(response.data)
     }else{
         if (stream) {
-        res.set({
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-        })
-        streamResponse(response.data, thinkingEnabled)
+          res.set({
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+          })
+          streamResponse(response.data, thinkingEnabled)
         } else {
-        res.set({
-            'Content-Type': 'application/json',
-        })
-        notStreamResponse(response.data)
+          res.set({
+              'Content-Type': 'application/json',
+          })
+          notStreamResponse(response.data)
         }
     }
 

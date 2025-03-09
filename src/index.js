@@ -151,44 +151,45 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   const notStreamResponse = async (response,_id) => {
     try {
       if(isSearch){
-        _chat_response = await axios.post('https://chat.qwen.ai/api/v1/chats/'+_id,
-          {
-            "chat": {
-                  "models": ["qwen-max-latest"],
-                  "history": {},
-                  "messages": [],
-                  "params": {},
-                  "files": [],
-                  "chat_type": "search"
-            },
-            headers: {
-             "Authorization": `Bearer ${authToken}`,
-             "Host": "chat.qwen.ai",
-             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
-             "Connection": "keep-alive",
-             "Accept": "*/*",
-             "Accept-Encoding": "gzip, deflate, br, zstd",
-             "Content-Type": "application/json",
-             "x-request-id": `${uuid.v4()}`,
-             "bx-umidtoken": process.env.BX_UMIDTOKEN,
-             "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Microsoft Edge\";v=\"133\", \"Chromium\";v=\"133\"",
-             "bx-ua": process.env.BX_UA,
-             "sec-ch-ua-mobile": "?0",
-             "sec-ch-ua-platform": "\"Windows\"",
-             "bx-v": "2.5.28",
-             "origin": "https://chat.qwen.ai",
-             "sec-fetch-site": "same-origin",
-             "sec-fetch-mode": "cors",
-             "sec-fetch-dest": "empty",
-             "referer": "https://chat.qwen.ai/",
-             "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-             "cookie": `${process.env.COOKIE.replace("`${authToken}`",authToken)}`,
-             "priority": "u=1, i"
-            },
-            responseType: 'json'
-          }
-        )
-        console.log(_chat_response.data)
+        //非stream的请求待处理
+        // _chat_response = await axios.post('https://chat.qwen.ai/api/v1/chats/'+_id,
+        //   {
+        //     "chat": {
+        //           "models": ["qwen-max-latest"],
+        //           "history": {},
+        //           "messages": [],
+        //           "params": {},
+        //           "files": [],
+        //           "chat_type": "search"
+        //     },
+        //     headers: {
+        //      "Authorization": `Bearer ${authToken}`,
+        //      "Host": "chat.qwen.ai",
+        //      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
+        //      "Connection": "keep-alive",
+        //      "Accept": "*/*",
+        //      "Accept-Encoding": "gzip, deflate, br, zstd",
+        //      "Content-Type": "application/json",
+        //      "x-request-id": `${uuid.v4()}`,
+        //      "bx-umidtoken": process.env.BX_UMIDTOKEN,
+        //      "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Microsoft Edge\";v=\"133\", \"Chromium\";v=\"133\"",
+        //      "bx-ua": process.env.BX_UA,
+        //      "sec-ch-ua-mobile": "?0",
+        //      "sec-ch-ua-platform": "\"Windows\"",
+        //      "bx-v": "2.5.28",
+        //      "origin": "https://chat.qwen.ai",
+        //      "sec-fetch-site": "same-origin",
+        //      "sec-fetch-mode": "cors",
+        //      "sec-fetch-dest": "empty",
+        //      "referer": "https://chat.qwen.ai/",
+        //      "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+        //      "cookie": `${process.env.COOKIE.replace("`${authToken}`",authToken)}`,
+        //      "priority": "u=1, i"
+        //     },
+        //     responseType: 'json'
+        //   }
+        // )
+        // console.log(_chat_response.data)
       }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,

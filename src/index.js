@@ -148,14 +148,28 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   }
   const stream = req.body.stream
 
-  const notStreamResponse = async (response) => {
+  const notStreamResponse = async (response,_id) => {
     try {
       if(isSearch){
-        _chat_response = await axios.get('https://chat.qwen.ai/api/v1/chats/?page=1',
+        let _data = {
+          "chat": {
+              "models": [
+                  "qwen-max-latest"
+              ],
+              "history": {}
+              "messages": [
+              ],
+              "params": {},
+              "files": [],
+              "chat_type": "search"
+          }
+       }
+        _chat_response = await axios.post('https://chat.qwen.ai/api/v1/chats/'+_id,
           {
+            _data,
             headers: {
-              "Authorization": `Bearer ${authToken}`,
-              "Host": "chat.qwen.ai",
+             "Authorization": `Bearer ${authToken}`,
+             "Host": "chat.qwen.ai",
              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
              "Connection": "keep-alive",
              "Accept": "*/*",
@@ -180,7 +194,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             responseType: 'json'
           }
         )
-        console.log(_chat_response)
+        console.log(_chat_response.data)
       }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,
@@ -589,7 +603,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             "model": req.body.model,
             "messages": messages,
             "stream": stream,
-            "chat_id": `${uuid.v4()}`,
+            "chat_id": _id,
             "chat_type": searchEnabled ? 'search' : "t2t"
         },
         {
@@ -638,8 +652,8 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           res.set({
               'Content-Type': 'application/json',
           })
-          console.log(response)
-          notStreamResponse(response.data)
+          console.log(response.data)
+          notStreamResponse(response.data,_id)
         }
     }
 

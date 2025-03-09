@@ -182,7 +182,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
              "sec-fetch-dest": "empty",
              "referer": "https://chat.qwen.ai/",
              "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-             "cookie": `${process.env.COOKIE}`,
+             "cookie": `${process.env.COOKIE.replace("`${authToken}`",${authToken})}`,
              "priority": "u=1, i"
             },
             responseType: 'json'
@@ -528,7 +528,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
            "sec-fetch-dest": "empty",
            "referer": "https://chat.qwen.ai/",
            "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-           "cookie": `${process.env.COOKIE}`,
+           "cookie": `${process.env.COOKIE.replace("`${authToken}`",${authToken})}`,
            "priority": "u=1, i"
           },
           responseType: 'json'
@@ -585,7 +585,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
            "sec-fetch-dest": "empty",
            "referer": "https://chat.qwen.ai/",
            "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-           "cookie": process.env.COOKIE,
+           "cookie": `${process.env.COOKIE.replace("`${authToken}`",${authToken})}`,
            "priority": "u=1, i"
           },
           responseType: 'json'
@@ -622,7 +622,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
            "sec-fetch-dest": "empty",
            "referer": "https://chat.qwen.ai/",
            "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
-           "cookie": process.env.COOKIE,
+           "cookie": `${process.env.COOKIE.replace("`${authToken}`",${authToken})}`,
            "priority": "u=1, i"
          },
             responseType: stream ? 'stream' : 'json'

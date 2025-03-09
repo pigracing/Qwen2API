@@ -16,6 +16,7 @@ if ((!process.env.ACCOUNT_TOKENS && process.env.API_KEY) || (process.env.ACCOUNT
 
 const accountTokens = process.env.ACCOUNT_TOKENS
 let accountManager = null
+let isSearch = false
 
 if (accountTokens) {
   accountManager = new Account(accountTokens)
@@ -149,7 +150,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
-      if(req.body.model.includes('-search')){
+      if(isSearch){
         _chat_response = await axios.get('https://chat.qwen.ai/api/v1/chats/?page=1',
           {
             headers: {
@@ -179,7 +180,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             responseType: 'json'
           }
         )
-        console.log(_chat_response.text)
+        console.log(_chat_response)
       }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,
@@ -457,6 +458,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
       searchEnabled = true
       messages[messages.length - 1].chat_type = 'search'
       req.body.model = req.body.model.replace('-search', '')
+      isSearch = true
     }
 
     let response 
@@ -635,7 +637,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           res.set({
               'Content-Type': 'application/json',
           })
-          console.log(response.text)
+          console.log(response)
           notStreamResponse(response.data)
         }
     }

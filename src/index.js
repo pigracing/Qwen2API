@@ -151,22 +151,21 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
   const notStreamResponse = async (response,_id) => {
     try {
       if(isSearch){
-        let _data = {
-          "chat": {
-              "models": [
-                  "qwen-max-latest"
-              ],
-              "history": {},
-              "messages": [
-              ],
-              "params": {},
-              "files": [],
-              "chat_type": "search"
-          }
-       }
         _chat_response = await axios.post('https://chat.qwen.ai/api/v1/chats/'+_id,
           {
-            _data,
+            {
+              "chat": {
+                  "models": [
+                      "qwen-max-latest"
+                  ],
+                  "history": {},
+                  "messages": [
+                  ],
+                  "params": {},
+                  "files": [],
+                  "chat_type": "search"
+              }
+           },
             headers: {
              "Authorization": `Bearer ${authToken}`,
              "Host": "chat.qwen.ai",

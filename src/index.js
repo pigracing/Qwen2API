@@ -589,6 +589,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
             "model": req.body.model,
             "messages": messages,
             "stream": stream,
+            "chat_id": `${uuid.v4()}`,
             "chat_type": searchEnabled ? 'search' : "t2t"
         },
         {

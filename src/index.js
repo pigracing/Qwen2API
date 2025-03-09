@@ -149,6 +149,38 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
 
   const notStreamResponse = async (response) => {
     try {
+      if(req.body.model.includes('-search')){
+        _chat_response = await axios.get('https://chat.qwen.ai/api/v1/chats/?page=1',
+          {
+            headers: {
+              "Authorization": `Bearer ${authToken}`,
+              "Host": "chat.qwen.ai",
+             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
+             "Connection": "keep-alive",
+             "Accept": "*/*",
+             "Accept-Encoding": "gzip, deflate, br, zstd",
+             "Content-Type": "application/json",
+             "x-request-id": `${uuid.v4()}`,
+             "bx-umidtoken": process.env.BX_UMIDTOKEN,
+             "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Microsoft Edge\";v=\"133\", \"Chromium\";v=\"133\"",
+             "bx-ua": process.env.BX_UA,
+             "sec-ch-ua-mobile": "?0",
+             "sec-ch-ua-platform": "\"Windows\"",
+             "bx-v": "2.5.28",
+             "origin": "https://chat.qwen.ai",
+             "sec-fetch-site": "same-origin",
+             "sec-fetch-mode": "cors",
+             "sec-fetch-dest": "empty",
+             "referer": "https://chat.qwen.ai/",
+             "accept-language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+             "cookie": `${process.env.COOKIE}`,
+             "priority": "u=1, i"
+            },
+            responseType: 'json'
+          }
+        )
+        console.log(_chat_response.text)
+      }
       const bodyTemplate = {
         "id": `chatcmpl-${uuid.v4()}`,
         "object": "chat.completion",
@@ -603,6 +635,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
           res.set({
               'Content-Type': 'application/json',
           })
+          console.log(response.text)
           notStreamResponse(response.data)
         }
     }

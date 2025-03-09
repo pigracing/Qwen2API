@@ -156,7 +156,7 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
               "models": [
                   "qwen-max-latest"
               ],
-              "history": {}
+              "history": {},
               "messages": [
               ],
               "params": {},

@@ -159,13 +159,12 @@ app.post(`${process.env.API_PREFIX ? process.env.API_PREFIX : ''}/v1/chat/comple
                       "qwen-max-latest"
                   ],
                   "history": {},
-                  "messages": [
-                  ],
+                  "messages": [],
                   "params": {},
                   "files": [],
                   "chat_type": "search"
-              }
-           },
+                }
+            },
             headers: {
              "Authorization": `Bearer ${authToken}`,
              "Host": "chat.qwen.ai",
